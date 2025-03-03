@@ -1,0 +1,13 @@
+{
+  "id": "vm-updates-agent",
+  "name": "VM Updates Agent",
+  "description": "Basic VM updates agent that checks for updates and applies them when a VM is started",
+  "repo_url": "https://github.com/cjlapao/pd-ai-updates-agent",
+  "tag": "v0.1.0",
+  "agents": [
+    "background-agent.security-checks:SecurityUpdateChecksAgent"
+  ],
+  "requirements": [
+    "psutil>=5.9.0"
+  ]
+}
