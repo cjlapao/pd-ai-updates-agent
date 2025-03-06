@@ -1,30 +1,31 @@
 import logging
-from typing import Optional, List
-from constants.background_messages import (
-    BACKGROUND_MESSAGE_TYPE_SECURITY_CHECKS,
-    BACKGROUND_MESSAGE_TYPE_RUN_UPDATE,
+from typing import List
+from pd_ai_agent_core.messages.constants import (
+    VM_STATE_STARTED,
+    VM_RUN_UPDATE,
 )
-from prlctl.execute_on_vm import execute_on_vm
-from interfaces.background_agent import BackgroundAgent
-from models.background_message import BackgroundMessage
-from datasource.vm_data_source import VMDataSource
-from services.session.notification_service import NotificationService
-from constants.constants import (
+from pd_ai_agent_core.parallels_desktop.execute_on_vm import execute_on_vm
+from pd_ai_agent_core.core_types.background_agent import BackgroundAgent
+from pd_ai_agent_core.messages.background_message import BackgroundMessage
+from pd_ai_agent_core.services.vm_datasource_service import VmDatasourceService
+from pd_ai_agent_core.services.notification_service import NotificationService
+from pd_ai_agent_core.common.constants import (
     NOTIFICATION_SERVICE_NAME,
     LOGGER_SERVICE_NAME,
+    VM_DATASOURCE_SERVICE_NAME,
 )
-from services.singleton.service_registry import ServiceRegistry
+from pd_ai_agent_core.services.service_registry import ServiceRegistry
 from datasource.background_security_datasource import BackgroundSecurityDataSource
 from datetime import datetime, timedelta
 import asyncio
-from models.notification_message import (
+from pd_ai_agent_core.messages.notification_message import (
     create_info_notification_message,
     create_warning_notification_message,
     NotificationAction,
     NotificationActionType,
 )
-from services.session.log_service import LogService
-from models.notification_message import (
+from pd_ai_agent_core.services.log_service import LogService
+from pd_ai_agent_core.messages.notification_message import (
     create_error_notification_message,
 )
 
@@ -39,9 +40,13 @@ class SecurityUpdateChecksAgent(BackgroundAgent):
             interval=None,
         )
         self._security_datasource = BackgroundSecurityDataSource()
-        self.subscribe_to(BACKGROUND_MESSAGE_TYPE_SECURITY_CHECKS)
-        self.subscribe_to(BACKGROUND_MESSAGE_TYPE_RUN_UPDATE)
-        self._vm_datasource = VMDataSource.get_instance()
+        self.subscribe_to(VM_STATE_STARTED)
+        self.subscribe_to(VM_RUN_UPDATE)
+        self.data = ServiceRegistry.get(
+            session_id,
+            VM_DATASOURCE_SERVICE_NAME,
+            VmDatasourceService,
+        )
         self._notifications_service = ServiceRegistry.get(
             session_id, NOTIFICATION_SERVICE_NAME, NotificationService
         )
@@ -65,16 +70,18 @@ class SecurityUpdateChecksAgent(BackgroundAgent):
     async def process_message(self, message: BackgroundMessage) -> None:
         """Handle VM state change events"""
         try:
-            if message.message_type == BACKGROUND_MESSAGE_TYPE_SECURITY_CHECKS:
+            if message.message_type == VM_STATE_STARTED:
                 await self._process_check_for_security(message)
-            if message.message_type == BACKGROUND_MESSAGE_TYPE_RUN_UPDATE:
+            if message.message_type == VM_RUN_UPDATE:
                 await self._process_run_update(message)
         except Exception as e:
             logger.error(f"Error processing security checks: {e}")
 
     def _get_os(self, vm_id: str) -> str | None:
-        vm = self._vm_datasource.get_vm(vm_id)
-        if vm:
+        vm = self.data.datasource.get_vm(vm_id)
+        if not vm:
+            return None
+        if vm.os:
             return vm.os
         else:
             return None
@@ -158,11 +165,11 @@ class SecurityUpdateChecksAgent(BackgroundAgent):
                             actions=[
                                 NotificationAction(
                                     label="Update",
-                                    value=BACKGROUND_MESSAGE_TYPE_RUN_UPDATE,
+                                    value=VM_RUN_UPDATE,
                                     icon="cogs",
                                     kind=NotificationActionType.BACKGROUND_MESSAGE,
                                     data={
-                                        "message_type": BACKGROUND_MESSAGE_TYPE_SECURITY_CHECKS,
+                                        "message_type": VM_RUN_UPDATE,
                                         "vm_id": vm_id,
                                     },
                                 )

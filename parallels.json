@@ -1,12 +1,27 @@
 {
-  "id": "vm-updates-agent",
+  "id": "cjlapao-vm-updates-agent",
   "name": "VM Updates Agent",
   "description": "Basic VM updates agent that checks for updates and applies them when a VM is started",
   "repo_url": "https://github.com/cjlapao/pd-ai-updates-agent",
   "tag": "v0.1.0",
-  "agents": [
-    "background-agent.security-checks:SecurityUpdateChecksAgent"
+  "agent_definitions": [
+    {
+      "id": "cjlapao_security_checks_agent",
+      "name": "Updates Checks Agent",
+      "description": "Background agent for checking for updates",
+      "type": "background_agent",
+      "module_path": "cjlapao_ai_updates_agent.background-agent.security-checks",
+      "class_name": "SecurityUpdateChecksAgent"
+    }
   ],
+  "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hY3Rpdml0eSI+PHBhdGggZD0iTTIyIDEyaC00bC0zIDlMOSAzIDYgMTJIMiIvPjwvc3ZnPg==",
+  "author": "Carlos Lapao",
+  "categories": [
+    "system",
+    "updates",
+    "security"
+  ],
+  "company_url": "https://www.carloslapao.com/",
   "requirements": [
     "psutil>=5.9.0"
   ]
