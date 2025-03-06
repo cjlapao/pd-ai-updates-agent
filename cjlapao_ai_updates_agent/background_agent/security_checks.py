@@ -6,6 +6,7 @@ from pd_ai_agent_core.messages.constants import (
 )
 from pd_ai_agent_core.parallels_desktop.execute_on_vm import execute_on_vm
 from pd_ai_agent_core.core_types.background_agent import BackgroundAgent
+from pd_ai_agent_core.services.background_service import BackgroundAgentService
 from pd_ai_agent_core.messages.background_message import BackgroundMessage
 from pd_ai_agent_core.services.vm_datasource_service import VmDatasourceService
 from pd_ai_agent_core.services.notification_service import NotificationService
@@ -13,6 +14,7 @@ from pd_ai_agent_core.common.constants import (
     NOTIFICATION_SERVICE_NAME,
     LOGGER_SERVICE_NAME,
     VM_DATASOURCE_SERVICE_NAME,
+    BACKGROUND_SERVICE_NAME,
 )
 from pd_ai_agent_core.services.service_registry import ServiceRegistry
 from cjlapao_ai_updates_agent.datasource.background_security_datasource import (
@@ -52,8 +54,21 @@ class SecurityUpdateChecksAgent(BackgroundAgent):
         self._notifications_service = ServiceRegistry.get(
             session_id, NOTIFICATION_SERVICE_NAME, NotificationService
         )
+        self._background_service = ServiceRegistry.get(
+            session_id, BACKGROUND_SERVICE_NAME, BackgroundAgentService
+        )
         self._logger = ServiceRegistry.get(session_id, LOGGER_SERVICE_NAME, LogService)
         self._time_delta_checks = timedelta(hours=1)
+        if self._background_service is not None:
+            vms = self.data.datasource.get_vms_by_state("running")
+            for vm in vms:
+                logger.info(
+                    f"Posting VM_STATE_STARTED message for VM {vm.id} to check for updates"
+                )
+                self._background_service.post_message(
+                    VM_STATE_STARTED,
+                    {"vm_id": vm.id},
+                )
 
     @property
     def session_id(self) -> str:
