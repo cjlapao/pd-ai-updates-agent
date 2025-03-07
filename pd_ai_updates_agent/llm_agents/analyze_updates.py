@@ -1,6 +1,5 @@
 from pd_ai_agent_core.core_types.llm_chat_ai_agent import (
     LlmChatAgent,
-    LlmChatResult,
     LlmChatAgentResponse,
     AgentFunctionDescriptor,
 )
@@ -22,7 +21,6 @@ from pd_ai_agent_core.helpers import (
 from pd_ai_agent_core.common import (
     NOTIFICATION_SERVICE_NAME,
     LOGGER_SERVICE_NAME,
-    VM_DATASOURCE_SERVICE_NAME,
 )
 import openai
 from typing import List
@@ -31,12 +29,12 @@ from pd_ai_updates_agent.llm_agents.helpers import get_vm_details
 logger = logging.getLogger(__name__)
 
 
-def ANALYSE_UPDATES_WITH_LLM_PROMPT(context_variables) -> str:
+def ANALYZE_UPDATES_WITH_LLM_PROMPT(context_variables) -> str:
     result = """You are an AI specialized in security analysis of virtual machines (VMs).
 Your task is to evaluate the security posture of a VM by analyzing its operating system (OS) version and the output of package updates.
 Follow these steps to generate a comprehensive security report: 
 1.**Input Data**: 
-  This will be provided by the user, you need to analyse the OS version and the package update output.
+  This will be provided by the user, you need to analyze the OS version and the package update output.
   - OS Version
   - Installed Packages
   - Available Updates
@@ -78,7 +76,7 @@ If the user has provided a vm name, use it on your responses to the user to iden
     return result
 
 
-def ANALYSE_UPDATES_PROMPT(context_variables) -> str:
+def ANALYZE_UPDATES_PROMPT(context_variables) -> str:
     result = """You are an AI specialized in security analysis of virtual machines (VMs).
 .
 Please provide a comprehensive report that includes the following elements: 
@@ -91,7 +89,7 @@ Please provide a comprehensive report that includes the following elements:
 
 Ensure that the analysis is thorough, precise, and uses the most up-to-date security information available as of October 2023.
 
-You will need the following information to analyse the security of the virtual machine:
+You will need the following information to analyze the security of the virtual machine:
   - vm_id or vm_name  
 
 If you don't have the information, please ask the user for it.
@@ -107,26 +105,26 @@ If the user has provided a vm name, use it on your responses to the user to iden
     return result
 
 
-ANALYSE_UPDATES_TRANSFER_INSTRUCTIONS = """
-Call this function if the user is asking you to analyse the security, vulnerabilities, for updates of a VM.
+ANALYZE_UPDATES_TRANSFER_INSTRUCTIONS = """
+Call this function if the user is asking you to analyze the security, vulnerabilities, or updates of a VM.
     You will need the VM ID or VM Name to do this. check the context or history of the conversation for this information.
 """
 
 
-class AnalyseUpdatesAgent(LlmChatAgent):
+class AnalyzeUpdatesAgent(LlmChatAgent):
     def __init__(self):
         super().__init__(
-            name="Analyse Updates Agent",
-            instructions=ANALYSE_UPDATES_PROMPT,
-            description="This agent is responsible for analysing updates of a VM.",
-            functions=[self.analyse_updates_tool],  # type: ignore
+            name="Analyze Updates Agent",
+            instructions=ANALYZE_UPDATES_PROMPT,
+            description="This agent is responsible for analyzing updates of a VM.",
+            functions=[self.analyze_updates_tool],  # type: ignore
             function_descriptions=[
                 AgentFunctionDescriptor(
-                    name=self.analyse_updates_tool.__name__,
-                    description="Analyse the security of a VM",
+                    name=self.analyze_updates_tool.__name__,
+                    description="Analyze the security, vulnerabilities, or updates of a VM",
                 ),
             ],
-            transfer_instructions=ANALYSE_UPDATES_TRANSFER_INSTRUCTIONS,
+            transfer_instructions=ANALYZE_UPDATES_TRANSFER_INSTRUCTIONS,
         )
 
     def get_update_packages_cmd(self, os: str) -> List[str]:
@@ -165,7 +163,7 @@ class AnalyseUpdatesAgent(LlmChatAgent):
         else:
             return []
 
-    def analyse_updates_with_llm(
+    def analyze_updates_with_llm(
         self,
         context_variables: dict,
         os: str,
@@ -179,7 +177,7 @@ class AnalyseUpdatesAgent(LlmChatAgent):
                 messages=[
                     {
                         "role": "system",
-                        "content": ANALYSE_UPDATES_WITH_LLM_PROMPT(context_variables),
+                        "content": ANALYZE_UPDATES_WITH_LLM_PROMPT(context_variables),
                     },
                     {
                         "role": "user",
@@ -192,13 +190,13 @@ class AnalyseUpdatesAgent(LlmChatAgent):
             print(f"Error using OpenAI API: {e}")
             return None
 
-    def analyse_updates_tool(
+    def analyze_updates_tool(
         self,
         session_context: dict,
         context_variables: dict,
         vm_id: str,
     ) -> LlmChatAgentResponse:
-        """This function is used to analyse the security of a virtual machine or to check for vulnerabilities, updates, etc.
+        """This function is used to analyze the security, vulnerabilities, or updates of a virtual machine.
         it will require the vm_id to be provided.
         """
         try:
@@ -285,8 +283,8 @@ class AnalyseUpdatesAgent(LlmChatAgent):
                 )
             )
 
-            # lets analyse this with the llm to check for issues
-            analysis = self.analyse_updates_with_llm(
+            # lets analyze this with the llm to check for issues
+            analysis = self.analyze_updates_with_llm(
                 context_variables, os, list_all_packages.output, list_updates.output
             )
             ns.send_sync(
@@ -299,7 +297,7 @@ class AnalyseUpdatesAgent(LlmChatAgent):
             )
             return LlmChatAgentResponse(
                 status="success",
-                message=f"Analysed successfully security of vm {vm_id}",
+                message=f"Analyzed successfully security of vm {vm_id}",
                 data={"analysis": analysis},
             )
         except Exception as e:
@@ -313,6 +311,6 @@ class AnalyseUpdatesAgent(LlmChatAgent):
             )
             return LlmChatAgentResponse(
                 status="error",
-                message=f"Failed to analyse security of vm {vm_id}: {e}",
+                message=f"Failed to analyze security of vm {vm_id}: {e}",
                 error=str(e),
             )
