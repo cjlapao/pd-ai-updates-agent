@@ -17,7 +17,7 @@ from pd_ai_agent_core.common.constants import (
     BACKGROUND_SERVICE_NAME,
 )
 from pd_ai_agent_core.services.service_registry import ServiceRegistry
-from cjlapao_ai_updates_agent.datasource.background_security_datasource import (
+from pd_ai_updates_agent.datasource.background_security_datasource import (
     BackgroundSecurityDataSource,
 )
 from datetime import datetime, timedelta
