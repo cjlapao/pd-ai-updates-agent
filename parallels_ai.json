@@ -1,16 +1,18 @@
 {
   "id": "pd-vm-updates-agent",
   "name": "Virtual Machine Updates Agent",
-  "description": "Basic virtual machine updates agent that checks for updates and applies them when a VM is started or during chat",
+  "short_description": "Basic virtual machine updates agent that checks for updates and applies them when a VM is started or during chat",
+  "long_description": "This agent checks for updates and applies them when a VM is started or during chat",
   "repo_url": "https://github.com/Parallels/pd-ai-agent-updates-agents",
-  "tag": "v0.1.0",
+  "tag": "v0.1.1",
+  "version": "0.1.1",
   "agent_definitions": [
     {
       "id": "pd_security_checks_agent",
       "name": "Background Updates Checks Agent",
       "description": "Background agent for checking for updates",
       "type": "background_agent",
-      "module_path": "pd_ai_updates_agent.background-agent.security-checks",
+      "module_path": "pd_ai_updates_agent.background_agent.security_checks",
       "class_name": "SecurityUpdateChecksAgent"
     },
     {
